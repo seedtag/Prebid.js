@@ -88,8 +88,10 @@ function buildBid(seedtagBid) {
     currency: seedtagBid.currency,
     netRevenue: true,
     mediaType: mediaType,
-    ttl: seedtagBid.ttl
+    ttl: seedtagBid.ttl,
+    nurl: seedtagBid.nurl
   };
+
   if (mediaType === VIDEO) {
     bid.vastXml = seedtagBid.content;
   } else {
