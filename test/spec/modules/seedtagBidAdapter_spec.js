@@ -42,7 +42,7 @@ describe('Seedtag Adapter', function() {
               }
             )
           }
-          const placements = ['banner', 'video', 'inImage', 'inScreen']
+          const placements = ['banner', 'video', 'inImage', 'inScreen', 'inArticle']
           placements.forEach(placement => {
             it('should be ' + placement, function() {
               const isBidRequestValid = spec.isBidRequestValid(
@@ -53,7 +53,7 @@ describe('Seedtag Adapter', function() {
           })
         })
       })
-      describe('when video slot has all mandatory params.', function() {
+      describe('when video slot has all mandatory params', function() {
         it('should return true, when video mediatype object are correct.', function() {
           const slotConfig = getSlotConfigs(
             {
@@ -116,7 +116,7 @@ describe('Seedtag Adapter', function() {
           expect(isBidRequestValid).to.equal(false)
         })
       })
-      describe('when video mediaType object is not correct.', function() {
+      describe('when video mediaType object is not correct', function() {
         function createVideoSlotconfig(mediaType) {
           return getSlotConfigs(mediaType, {
             publisherId: PUBLISHER_ID,
