@@ -200,6 +200,16 @@ export const spec = {
   onTimeout(data) {
     getTimeoutUrl(data);
     utils.triggerPixel(SEEDTAG_SSP_ONTIMEOUT_ENDPOINT);
+  },
+
+  /**
+   * Function to call when the adapter wins the auction
+   * @param {bid} Bid information received from the server
+   */
+  onBidWon: function (bid) {
+    if (bid && bid.nurl) {
+      utils.triggerPixel(bid.nurl);
+    }
   }
 }
 registerBidder(spec);

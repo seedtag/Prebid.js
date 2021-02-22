@@ -1,5 +1,6 @@
 import { expect } from 'chai'
 import { spec, getTimeoutUrl } from 'modules/seedtagBidAdapter.js'
+import * as utils from 'src/utils.js'
 
 const PUBLISHER_ID = '0000-0000-01'
 const ADUNIT_ID = '000000'
@@ -414,6 +415,35 @@ describe('Seedtag Adapter', function() {
         '&adUnitId=' +
         params.adUnitId
       )
+    })
+  })
+
+  describe('onBidWon', function () {
+    beforeEach(function() {
+      sinon.stub(utils, 'triggerPixel')
+    })
+
+    afterEach(function() {
+      utils.triggerPixel.restore()
+    })
+
+    describe('without nurl', function() {
+      const bid = {}
+
+      it('does not create pixel ', function() {
+        spec.onBidWon(bid)
+        expect(utils.triggerPixel.called).to.equal(false);
+      })
+    })
+
+    describe('with nurl', function () {
+      const nurl = 'http://seedtag_domain/won'
+      const bid = { nurl }
+
+      it('creates nurl pixel if bid nurl', function() {
+        spec.onBidWon({ nurl })
+        expect(utils.triggerPixel.calledWith(nurl)).to.equal(true);
+      })
     })
   })
 })
