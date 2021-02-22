@@ -302,7 +302,7 @@ describe('Seedtag Adapter', function() {
       expect(typeof bids).to.equal('object')
       expect(bids.length).to.equal(0)
     })
-    it('should return a void array, when the server response have not got bids.', function() {
+    it('should return a void array, when the server response have no bids.', function() {
       const request = { data: JSON.stringify({}) }
       const serverResponse = { body: { bids: [] } }
       const bids = spec.interpretResponse(serverResponse, request)
@@ -324,7 +324,8 @@ describe('Seedtag Adapter', function() {
                   width: 728,
                   height: 90,
                   mediaType: 'display',
-                  ttl: 360
+                  ttl: 360,
+                  nurl: 'testurl.com/nurl'
                 }
               ],
               cookieSync: { url: '' }
@@ -339,6 +340,7 @@ describe('Seedtag Adapter', function() {
           expect(bids[0].currency).to.equal('USD')
           expect(bids[0].netRevenue).to.equal(true)
           expect(bids[0].ad).to.equal('content')
+          expect(bids[0].nurl).to.equal('testurl.com/nurl')
         })
       })
       describe('the bid is a video', function() {
@@ -355,7 +357,8 @@ describe('Seedtag Adapter', function() {
                   width: 728,
                   height: 90,
                   mediaType: 'video',
-                  ttl: 360
+                  ttl: 360,
+                  nurl: undefined
                 }
               ],
               cookieSync: { url: '' }
