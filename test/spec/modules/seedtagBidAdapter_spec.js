@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { spec, getTimeoutUrl } from 'modules/seedtagBidAdapter.js'
+import { spec, getTimeoutUrl, testCreativeParam } from 'modules/seedtagBidAdapter.js'
 import * as utils from 'src/utils.js'
 
 const PUBLISHER_ID = '0000-0000-01'
@@ -293,7 +293,6 @@ describe('Seedtag Adapter', function() {
         expect(bannerBid.sizes[1][0]).to.equal(300)
         expect(bannerBid.sizes[1][1]).to.equal(600)
         expect(bannerBid.requestCount).to.equal(1)
-        expect(bannerBid.testCreative).to.equal('creative')
       })
       it('should request an InStream Video', function() {
         const videoBid = bidRequests[1]
@@ -311,7 +310,6 @@ describe('Seedtag Adapter', function() {
         expect(videoBid.sizes[1][0]).to.equal(300)
         expect(videoBid.sizes[1][1]).to.equal(600)
         expect(videoBid.requestCount).to.equal(1)
-        expect(bannerBid.testCreative).to.equal('undefined')
       })
     })
 
@@ -321,7 +319,7 @@ describe('Seedtag Adapter', function() {
           ...bidderRequest,
           refererInfo: {
             ...refererInfo,
-            referer: 'http://referer.com/?seedtag_test_creative=000000:creative'
+            referer: 'http://referer.com/?' + testCreativeParam + '=000000:creative'
           }
         }
         const request = spec.buildRequests(validBidRequests, bidderRequest)
@@ -337,7 +335,7 @@ describe('Seedtag Adapter', function() {
           ...bidderRequest,
           refererInfo: {
             ...refererInfo,
-            referer: 'http://referer.com/?seedtag_test_creative=creative'
+            referer: 'http://referer.com/?' + testCreativeParam + '=creative'
           }
         }
         const request = spec.buildRequests(validBidRequests, updatedBidderRequest)
@@ -379,7 +377,7 @@ describe('Seedtag Adapter', function() {
           ...bidderRequest,
           refererInfo: {
             ...refererInfo,
-            referer: 'http://referer.com/?seedtag_test_creative=00000:creative'
+            referer: 'http://referer.com/?' + testCreativeParam + '=00000:creative'
           }
         }
         const request = spec.buildRequests(updatedValidBidRequests, updatedBidderRequest)
@@ -399,7 +397,7 @@ describe('Seedtag Adapter', function() {
           ...bidderRequest,
           refererInfo: {
             ...refererInfo,
-            referer: 'http://referer.com/?seedtag_test_creative=creative2'
+            referer: 'http://referer.com/?' + testCreativeParam + '=creative2'
           }
         }
         const request = spec.buildRequests(updatedValidBidRequests, updatedBidderRequest)
@@ -408,6 +406,38 @@ describe('Seedtag Adapter', function() {
 
         expect(bidRequests[0].testCreative).to.equal('creative2')
         expect(bidRequests[1].testCreative).to.equal('creative2')
+      })
+
+      it('should handle adtag as creative for a specific adunit', function () {
+        const updatedBidderRequest = {
+          ...bidderRequest,
+          refererInfo: {
+            ...refererInfo,
+            referer: 'http://referer.com/?' + testCreativeParam + '=000000:adtag:xxxxxx'
+          }
+        }
+        const request = spec.buildRequests(validBidRequests, bidderRequest)
+        const data = JSON.parse(request.data)
+        const bidRequests = data.bidRequests
+
+        expect(bidRequests[0].testCreative).to.equal('adtag:xxxxxx')
+        expect(bidRequests[1].testCreative).to.equal(undefined)
+      })
+
+      it('should handle adtag as creative for all adunits', function () {
+        const updatedBidderRequest = {
+          ...bidderRequest,
+          refererInfo: {
+            ...refererInfo,
+            referer: 'http://referer.com/?' + testCreativeParam + '=adtag:xxxxxx'
+          }
+        }
+        const request = spec.buildRequests(validBidRequests, bidderRequest)
+        const data = JSON.parse(request.data)
+        const bidRequests = data.bidRequests
+
+        expect(bidRequests[0].testCreative).to.equal('adtag:xxxxxx')
+        expect(bidRequests[1].testCreative).to.equal('adtag:xxxxxx')
       })
     })
   })

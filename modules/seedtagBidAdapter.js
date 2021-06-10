@@ -146,21 +146,23 @@ function buildBidResponse(seedtagBid) {
   return bid;
 }
 
+export const testCreativeParam = 'pbjs_seedtag_creative'
+
 function getOveriddenCreative(referrerUrl) {
   const url = new URL(referrerUrl)
-  const creativeParam = url.searchParams.get('pbjs_seedtag_creativeParam')
+  const creativeParam = url.searchParams.get(testCreativeParam)
   if (creativeParam) {
     const parts = creativeParam.split(':')
 
-    if (parts > 1) {
+    if (parts > 1 && parts[0] !== 'adtag') {
       return {
         adUnitId: parts[0],
-        creative: parts[1]
+        creative: parts.slice(1).join(':')
       }
     } else {
       return {
         adUnitId: null,
-        creative: parts
+        creative: parts.join(':')
       }
     }
   }
