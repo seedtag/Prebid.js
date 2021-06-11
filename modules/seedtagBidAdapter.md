@@ -146,4 +146,5 @@ http://publisherpage.com/article?pbjs_seedtag_creative=display-open-300x250
 | video-direct-fiv | 600x600 |
 | video-direct-piv | 600x600 |
 | video-open-piv | 600x600 |
-| adtag:[id] | - |
+| video:[adtagId] | 600x600 |
+| display:[adtagId] | 600x600 |

@@ -155,7 +155,7 @@ function getOveriddenCreative(referrerUrl) {
     if (creativeParam) {
       const parts = creativeParam.split(':')
 
-      if (parts.length > 1 && parts[0] !== 'adtag') {
+      if (parts.length > 1 && ['video', 'display'].indexOf(parts[0]) === -1) {
         return {
           adUnitId: parts[0],
           creative: parts.slice(1).join(':')
