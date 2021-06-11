@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { spec, getTimeoutUrl, testCreativeParam } from 'modules/seedtagBidAdapter.js'
+import { spec, getTimeoutUrl, forceCreativeFromUrlParam } from 'modules/seedtagBidAdapter.js'
 import * as utils from 'src/utils.js'
 
 const PUBLISHER_ID = '0000-0000-01'
@@ -287,7 +287,7 @@ describe('Seedtag Adapter', function() {
           'd704d006-0d6e-4a09-ad6c-179e7e758096'
         )
         expect(bannerBid.supplyTypes[0]).to.equal('display')
-        expect(bannerBid.adUnitId).to.equal('000000')
+        expect(bannerBid.adUnitId).to.equal(ADUNIT_ID)
         expect(bannerBid.sizes[0][0]).to.equal(300)
         expect(bannerBid.sizes[0][1]).to.equal(250)
         expect(bannerBid.sizes[1][0]).to.equal(300)
@@ -301,7 +301,7 @@ describe('Seedtag Adapter', function() {
           'd704d006-0d6e-4a09-ad6c-179e7e758096'
         )
         expect(videoBid.supplyTypes[0]).to.equal('video')
-        expect(videoBid.adUnitId).to.equal('0000001')
+        expect(videoBid.adUnitId).to.equal(ADUNIT_ID + '1')
         expect(videoBid.videoParams.mimes).to.equal('mp4')
         expect(videoBid.videoParams.w).to.equal(300)
         expect(videoBid.videoParams.h).to.equal(200)
@@ -318,11 +318,11 @@ describe('Seedtag Adapter', function() {
         const updatedBidderRequest = {
           ...bidderRequest,
           refererInfo: {
-            ...refererInfo,
-            referer: 'http://referer.com/?' + testCreativeParam + '=000000:creative'
+            ...bidderRequest.refererInfo,
+            referer: 'http://referer.com/?' + forceCreativeFromUrlParam + '=' + ADUNIT_ID + ':creative'
           }
         }
-        const request = spec.buildRequests(validBidRequests, bidderRequest)
+        const request = spec.buildRequests(validBidRequests, updatedBidderRequest)
         const data = JSON.parse(request.data)
         const bidRequests = data.bidRequests
 
@@ -334,8 +334,8 @@ describe('Seedtag Adapter', function() {
         const updatedBidderRequest = {
           ...bidderRequest,
           refererInfo: {
-            ...refererInfo,
-            referer: 'http://referer.com/?' + testCreativeParam + '=creative'
+            ...bidderRequest.refererInfo,
+            referer: 'http://referer.com/?' + forceCreativeFromUrlParam + '=creative'
           }
         }
         const request = spec.buildRequests(validBidRequests, updatedBidderRequest)
@@ -359,8 +359,8 @@ describe('Seedtag Adapter', function() {
         const updatedValidBidRequests = {
           ...validBidRequests,
         }
-        updatedValidBidRequests.bids[0].params.testCreative = 'creative'
-        const request = spec.buildRequests(validBidRequests, bidderRequest)
+        updatedValidBidRequests[0].params.testCreative = 'creative'
+        const request = spec.buildRequests(updatedValidBidRequests, bidderRequest)
         const data = JSON.parse(request.data)
         const bidRequests = data.bidRequests
 
@@ -372,12 +372,12 @@ describe('Seedtag Adapter', function() {
         const updatedValidBidRequests = {
           ...validBidRequests,
         }
-        updatedValidBidRequests.bids[0].params.testCreative = 'creative'
+        updatedValidBidRequests[0].params.testCreative = 'creative'
         const updatedBidderRequest = {
           ...bidderRequest,
           refererInfo: {
-            ...refererInfo,
-            referer: 'http://referer.com/?' + testCreativeParam + '=00000:creative'
+            ...bidderRequest.refererInfo,
+            referer: 'http://referer.com/?' + forceCreativeFromUrlParam + '=00000:creative'
           }
         }
         const request = spec.buildRequests(updatedValidBidRequests, updatedBidderRequest)
@@ -392,12 +392,12 @@ describe('Seedtag Adapter', function() {
         const updatedValidBidRequests = {
           ...validBidRequests,
         }
-        updatedValidBidRequests.bids[0].params.testCreative = 'creative'
+        updatedValidBidRequests[0].params.testCreative = 'creative'
         const updatedBidderRequest = {
           ...bidderRequest,
           refererInfo: {
-            ...refererInfo,
-            referer: 'http://referer.com/?' + testCreativeParam + '=creative2'
+            ...bidderRequest.refererInfo,
+            referer: 'http://referer.com/?' + forceCreativeFromUrlParam + '=creative2'
           }
         }
         const request = spec.buildRequests(updatedValidBidRequests, updatedBidderRequest)
@@ -412,11 +412,11 @@ describe('Seedtag Adapter', function() {
         const updatedBidderRequest = {
           ...bidderRequest,
           refererInfo: {
-            ...refererInfo,
-            referer: 'http://referer.com/?' + testCreativeParam + '=000000:adtag:xxxxxx'
+            ...bidderRequest.refererInfo,
+            referer: 'http://referer.com/?' + forceCreativeFromUrlParam + '=' + ADUNIT_ID + ':adtag:xxxxxx'
           }
         }
-        const request = spec.buildRequests(validBidRequests, bidderRequest)
+        const request = spec.buildRequests(validBidRequests, updatedBidderRequest)
         const data = JSON.parse(request.data)
         const bidRequests = data.bidRequests
 
@@ -428,11 +428,11 @@ describe('Seedtag Adapter', function() {
         const updatedBidderRequest = {
           ...bidderRequest,
           refererInfo: {
-            ...refererInfo,
-            referer: 'http://referer.com/?' + testCreativeParam + '=adtag:xxxxxx'
+            ...bidderRequest.refererInfo,
+            referer: 'http://referer.com/?' + forceCreativeFromUrlParam + '=adtag:xxxxxx'
           }
         }
-        const request = spec.buildRequests(validBidRequests, bidderRequest)
+        const request = spec.buildRequests(validBidRequests, updatedBidderRequest)
         const data = JSON.parse(request.data)
         const bidRequests = data.bidRequests
 

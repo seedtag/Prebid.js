@@ -95,7 +95,7 @@ function buildBidRequest(validBidRequest) {
 
   // check query params
   if (params.testCreative) {
-    bidRequest.creative = params.testCreative
+    bidRequest.testCreative = params.testCreative
   }
 
   return bidRequest;
@@ -146,26 +146,28 @@ function buildBidResponse(seedtagBid) {
   return bid;
 }
 
-export const testCreativeParam = 'pbjs_seedtag_creative'
+export const forceCreativeFromUrlParam = 'pbjs_seedtag_creative'
 
 function getOveriddenCreative(referrerUrl) {
-  const url = new URL(referrerUrl)
-  const creativeParam = url.searchParams.get(testCreativeParam)
-  if (creativeParam) {
-    const parts = creativeParam.split(':')
+  try {
+    const url = new URL(referrerUrl)
+    const creativeParam = url.searchParams.get(forceCreativeFromUrlParam)
+    if (creativeParam) {
+      const parts = creativeParam.split(':')
 
-    if (parts > 1 && parts[0] !== 'adtag') {
-      return {
-        adUnitId: parts[0],
-        creative: parts.slice(1).join(':')
-      }
-    } else {
-      return {
-        adUnitId: null,
-        creative: parts.join(':')
+      if (parts.length > 1 && parts[0] !== 'adtag') {
+        return {
+          adUnitId: parts[0],
+          creative: parts.slice(1).join(':')
+        }
+      } else {
+        return {
+          adUnitId: null,
+          creative: parts.join(':')
+        }
       }
     }
-  }
+  } catch (e) { }
 }
 
 export function getTimeoutUrl (data) {
@@ -220,6 +222,8 @@ export const spec = {
         if (creative && (!creative.adUnitId || creative.adUnitId === bid.adUnitId)) {
           bid.testCreative = creative.creative
         }
+
+        return bid
       })
     };
 
