@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { spec, getTimeoutUrl } from 'modules/seedtagBidAdapter.js'
+import { spec, getTimeoutUrl, forceCreativeFromUrlParam } from 'modules/seedtagBidAdapter.js'
 import * as utils from 'src/utils.js'
 
 const PUBLISHER_ID = '0000-0000-01'
@@ -186,7 +186,7 @@ describe('Seedtag Adapter', function() {
 
   describe('buildRequests method', function() {
     const bidderRequest = {
-      refererInfo: { referer: 'referer' },
+      refererInfo: { referer: 'http://referer' },
       timeout: 1000
     }
     const mandatoryParams = {
@@ -197,7 +197,8 @@ describe('Seedtag Adapter', function() {
     const inStreamParams = Object.assign({}, mandatoryParams, {
       video: {
         mimes: 'mp4'
-      }
+      },
+      adUnitId: ADUNIT_ID + '1'
     })
     const validBidRequests = [
       getSlotConfigs({ banner: {} }, mandatoryParams),
@@ -215,7 +216,7 @@ describe('Seedtag Adapter', function() {
     it('Common data request should be correct', function() {
       const request = spec.buildRequests(validBidRequests, bidderRequest)
       const data = JSON.parse(request.data)
-      expect(data.url).to.equal('referer')
+      expect(data.url).to.equal('http://referer')
       expect(data.publisherToken).to.equal('0000-0000-01')
       expect(typeof data.version).to.equal('string')
       expect(['fixed', 'mobile', 'unknown'].indexOf(data.connectionType)).to.be.above(-1)
@@ -286,7 +287,7 @@ describe('Seedtag Adapter', function() {
           'd704d006-0d6e-4a09-ad6c-179e7e758096'
         )
         expect(bannerBid.supplyTypes[0]).to.equal('display')
-        expect(bannerBid.adUnitId).to.equal('000000')
+        expect(bannerBid.adUnitId).to.equal(ADUNIT_ID)
         expect(bannerBid.sizes[0][0]).to.equal(300)
         expect(bannerBid.sizes[0][1]).to.equal(250)
         expect(bannerBid.sizes[1][0]).to.equal(300)
@@ -300,7 +301,7 @@ describe('Seedtag Adapter', function() {
           'd704d006-0d6e-4a09-ad6c-179e7e758096'
         )
         expect(videoBid.supplyTypes[0]).to.equal('video')
-        expect(videoBid.adUnitId).to.equal('000000')
+        expect(videoBid.adUnitId).to.equal(ADUNIT_ID + '1')
         expect(videoBid.videoParams.mimes).to.equal('mp4')
         expect(videoBid.videoParams.w).to.equal(300)
         expect(videoBid.videoParams.h).to.equal(200)
@@ -309,6 +310,150 @@ describe('Seedtag Adapter', function() {
         expect(videoBid.sizes[1][0]).to.equal(300)
         expect(videoBid.sizes[1][1]).to.equal(600)
         expect(videoBid.requestCount).to.equal(1)
+      })
+    })
+
+    describe('test creatives', function () {
+      it('should have a test creative for only for a specific adunit when overrided with url', function () {
+        const updatedBidderRequest = {
+          ...bidderRequest,
+          refererInfo: {
+            ...bidderRequest.refererInfo,
+            referer: 'http://referer.com/?' + forceCreativeFromUrlParam + '=' + ADUNIT_ID + ':creative'
+          }
+        }
+        const request = spec.buildRequests(validBidRequests, updatedBidderRequest)
+        const data = JSON.parse(request.data)
+        const bidRequests = data.bidRequests
+
+        expect(bidRequests[0].testCreative).to.equal('creative')
+        expect(bidRequests[1].testCreative).to.equal(undefined)
+      })
+
+      it('should have a test creative for all adunit when overrided with url', function () {
+        const updatedBidderRequest = {
+          ...bidderRequest,
+          refererInfo: {
+            ...bidderRequest.refererInfo,
+            referer: 'http://referer.com/?' + forceCreativeFromUrlParam + '=creative'
+          }
+        }
+        const request = spec.buildRequests(validBidRequests, updatedBidderRequest)
+        const data = JSON.parse(request.data)
+        const bidRequests = data.bidRequests
+
+        expect(bidRequests[0].testCreative).to.equal('creative')
+        expect(bidRequests[1].testCreative).to.equal('creative')
+      })
+
+      it('shouldn\'t have a test creative when nothing is specified on the url', function () {
+        const request = spec.buildRequests(validBidRequests, bidderRequest)
+        const data = JSON.parse(request.data)
+        const bidRequests = data.bidRequests
+
+        expect(bidRequests[0].testCreative).to.equal(undefined)
+        expect(bidRequests[1].testCreative).to.equal(undefined)
+      })
+
+      it('Should have a test creative when specified on the adunit config', function () {
+        const updatedValidBidRequests = {
+          ...validBidRequests,
+        }
+        updatedValidBidRequests[0].params.testCreative = 'creative'
+        const request = spec.buildRequests(updatedValidBidRequests, bidderRequest)
+        const data = JSON.parse(request.data)
+        const bidRequests = data.bidRequests
+
+        expect(bidRequests[0].testCreative).to.equal('creative')
+        expect(bidRequests[1].testCreative).to.equal(undefined)
+      })
+
+      it('Should override the test creative specified on the adunit config when using url', function () {
+        const updatedValidBidRequests = {
+          ...validBidRequests,
+        }
+        updatedValidBidRequests[0].params.testCreative = 'creative'
+        const updatedBidderRequest = {
+          ...bidderRequest,
+          refererInfo: {
+            ...bidderRequest.refererInfo,
+            referer: 'http://referer.com/?' + forceCreativeFromUrlParam + '=00000:creative'
+          }
+        }
+        const request = spec.buildRequests(updatedValidBidRequests, updatedBidderRequest)
+        const data = JSON.parse(request.data)
+        const bidRequests = data.bidRequests
+
+        expect(bidRequests[0].testCreative).to.equal('creative')
+        expect(bidRequests[1].testCreative).to.equal(undefined)
+      })
+
+      it('Should override the test creative specified on all adunit config when using url', function () {
+        const updatedValidBidRequests = {
+          ...validBidRequests,
+        }
+        updatedValidBidRequests[0].params.testCreative = 'creative'
+        const updatedBidderRequest = {
+          ...bidderRequest,
+          refererInfo: {
+            ...bidderRequest.refererInfo,
+            referer: 'http://referer.com/?' + forceCreativeFromUrlParam + '=creative2'
+          }
+        }
+        const request = spec.buildRequests(updatedValidBidRequests, updatedBidderRequest)
+        const data = JSON.parse(request.data)
+        const bidRequests = data.bidRequests
+
+        expect(bidRequests[0].testCreative).to.equal('creative2')
+        expect(bidRequests[1].testCreative).to.equal('creative2')
+      })
+
+      it('should handle video:adtagId creative for a specific adunit', function () {
+        const updatedBidderRequest = {
+          ...bidderRequest,
+          refererInfo: {
+            ...bidderRequest.refererInfo,
+            referer: 'http://referer.com/?' + forceCreativeFromUrlParam + '=' + ADUNIT_ID + ':video:xxxxxx'
+          }
+        }
+        const request = spec.buildRequests(validBidRequests, updatedBidderRequest)
+        const data = JSON.parse(request.data)
+        const bidRequests = data.bidRequests
+
+        expect(bidRequests[0].testCreative).to.equal('video:xxxxxx')
+        expect(bidRequests[1].testCreative).to.equal(undefined)
+      })
+
+      it('should handle display::adtagId as display creative for a specific adunit', function () {
+        const updatedBidderRequest = {
+          ...bidderRequest,
+          refererInfo: {
+            ...bidderRequest.refererInfo,
+            referer: 'http://referer.com/?' + forceCreativeFromUrlParam + '=' + ADUNIT_ID + ':display:xxxxxx'
+          }
+        }
+        const request = spec.buildRequests(validBidRequests, updatedBidderRequest)
+        const data = JSON.parse(request.data)
+        const bidRequests = data.bidRequests
+
+        expect(bidRequests[0].testCreative).to.equal('display:xxxxxx')
+        expect(bidRequests[1].testCreative).to.equal(undefined)
+      })
+
+      it('should handle adtag as creative for all adunits', function () {
+        const updatedBidderRequest = {
+          ...bidderRequest,
+          refererInfo: {
+            ...bidderRequest.refererInfo,
+            referer: 'http://referer.com/?' + forceCreativeFromUrlParam + '=video:xxxxxx'
+          }
+        }
+        const request = spec.buildRequests(validBidRequests, updatedBidderRequest)
+        const data = JSON.parse(request.data)
+        const bidRequests = data.bidRequests
+
+        expect(bidRequests[0].testCreative).to.equal('video:xxxxxx')
+        expect(bidRequests[1].testCreative).to.equal('video:xxxxxx')
       })
     })
   })

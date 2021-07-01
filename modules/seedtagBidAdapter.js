@@ -82,7 +82,7 @@ function buildBidRequest(validBidRequest) {
     supplyTypes: mediaTypes,
     adUnitId: params.adUnitId,
     placement: params.placement,
-    requestCount: validBidRequest.bidderRequestsCount || 1 // FIXME : in unit test the parameter bidderRequestsCount is undefined
+    requestCount: validBidRequest.bidderRequestsCount || 1, // FIXME : in unit test the parameter bidderRequestsCount is undefined
   };
 
   if (params.adPosition) {
@@ -91,6 +91,11 @@ function buildBidRequest(validBidRequest) {
 
   if (hasVideoMediaType(validBidRequest)) {
     bidRequest.videoParams = getVideoParams(validBidRequest)
+  }
+
+  // check query params
+  if (params.testCreative) {
+    bidRequest.testCreative = params.testCreative
   }
 
   return bidRequest;
@@ -141,6 +146,30 @@ function buildBidResponse(seedtagBid) {
   return bid;
 }
 
+export const forceCreativeFromUrlParam = 'pbjs_seedtag_creative'
+
+function getOveriddenCreative(referrerUrl) {
+  try {
+    const url = new URL(referrerUrl)
+    const creativeParam = url.searchParams.get(forceCreativeFromUrlParam)
+    if (creativeParam) {
+      const parts = creativeParam.split(':')
+
+      if (parts.length > 1 && ['video', 'display'].indexOf(parts[0]) === -1) {
+        return {
+          adUnitId: parts[0],
+          creative: parts.slice(1).join(':')
+        }
+      } else {
+        return {
+          adUnitId: null,
+          creative: parts.join(':')
+        }
+      }
+    }
+  } catch (e) { }
+}
+
 export function getTimeoutUrl (data) {
   let queryParams = '';
   if (
@@ -178,6 +207,7 @@ export const spec = {
    * @return ServerRequest Info describing the request to the server.
    */
   buildRequests(validBidRequests, bidderRequest) {
+    const creative = getOveriddenCreative(bidderRequest.refererInfo.referer)
     const payload = {
       url: bidderRequest.refererInfo.referer,
       publisherToken: validBidRequests[0].params.publisherId,
@@ -185,7 +215,16 @@ export const spec = {
       timeout: bidderRequest.timeout,
       version: '$prebid.version$',
       connectionType: getConnectionType(),
-      bidRequests: utils._map(validBidRequests, buildBidRequest)
+      bidRequests: utils._map(validBidRequests, (validBidRequest) => {
+        const bid = buildBidRequest(validBidRequest)
+
+        // force a creative with url params
+        if (creative && (!creative.adUnitId || creative.adUnitId === bid.adUnitId)) {
+          bid.testCreative = creative.creative
+        }
+
+        return bid
+      })
     };
 
     if (payload.cmp) {
