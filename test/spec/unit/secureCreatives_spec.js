@@ -476,7 +476,6 @@ describe('secureCreatives', () => {
         describe(`for ${test} bids`, () => {
           beforeEach(() => {
             prepBid(adResponse);
-            // throw JSON.stringify(adResponse);
             pushBidResponseToAuction(adResponse);
           });
 
