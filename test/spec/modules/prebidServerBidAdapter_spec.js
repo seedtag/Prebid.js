@@ -87,6 +87,83 @@ const REQUEST = {
   ]
 };
 
+const NATIVE_ORTB_MTO = {
+  ortb: {
+    context: 3,
+    ver: '1.2',
+    assets: [
+      {
+        id: 1,
+        required: 1,
+        img: {
+          type: 3,
+          w: 300,
+          h: 250
+        }
+      },
+      {
+        id: 2,
+        required: 1,
+        img: {
+          type: 1,
+          w: 127,
+          h: 83
+        }
+      },
+      {
+        id: 3,
+        required: 1,
+        data: {
+          type: 1,
+          len: 25
+        }
+      },
+      {
+        id: 4,
+        required: 1,
+        title: {
+          len: 140
+        }
+      },
+      {
+        id: 5,
+        required: 1,
+        data: {
+          type: 2,
+          len: 40
+        }
+      },
+      {
+        id: 6,
+        required: 1,
+        data: {
+          type: 12,
+          len: 15
+        }
+      }
+    ],
+    eventtrackers: [
+      {
+        event: 1,
+        methods: [
+          1
+        ]
+      },
+      {
+        event: 2,
+        methods: [
+          2
+        ]
+      }
+    ],
+    ext: {
+      custom_param: {
+        key: 'custom_value'
+      }
+    }
+  }
+}
+
 const VIDEO_REQUEST = {
   'account_id': '1',
   'tid': '437fbbf5-33f5-487a-8e16-a7112903cfe5',
@@ -1196,7 +1273,7 @@ describe('S2S Adapter', function () {
               } else {
                 delete getGlobal().convertCurrency;
               }
-            })
+            });
 
             it(`should pick the ${expectDesc}`, () => {
               adapter.callBids(s2sReq, BID_REQUESTS, addBidResponse, done, ajax);
@@ -1209,33 +1286,34 @@ describe('S2S Adapter', function () {
       });
     });
 
-    it('adds device.w and device.h even if the config lacks a device object', function () {
-      const _config = {
-        s2sConfig: CONFIG,
-        app: { bundle: 'com.test.app' },
-      };
+    describe('native requests', function () {
+      it('adds device.w and device.h even if the config lacks a device object', function () {
+        const _config = {
+          s2sConfig: CONFIG,
+          app: { bundle: 'com.test.app' },
+        };
 
-      config.setConfig(_config);
-      adapter.callBids(REQUEST, BID_REQUESTS, addBidResponse, done, ajax);
-      const requestBid = JSON.parse(server.requests[0].requestBody);
-      expect(requestBid.device).to.deep.equal({
-        w: window.innerWidth,
-        h: window.innerHeight
+        config.setConfig(_config);
+        adapter.callBids(REQUEST, BID_REQUESTS, addBidResponse, done, ajax);
+        const requestBid = JSON.parse(server.requests[0].requestBody);
+        expect(requestBid.device).to.deep.equal({
+          w: window.innerWidth,
+          h: window.innerHeight
+        });
+        expect(requestBid.app).to.deep.equal({
+          bundle: 'com.test.app',
+          publisher: { 'id': '1' }
+        });
       });
-      expect(requestBid.app).to.deep.equal({
-        bundle: 'com.test.app',
-        publisher: { 'id': '1' }
-      });
-    });
 
-    it('adds native request for OpenRTB', function () {
-      const _config = {
-        s2sConfig: CONFIG
-      };
+      it('adds native legacy request for OpenRTB', function () {
+        const _config = {
+          s2sConfig: CONFIG
+        };
 
-      config.setConfig(_config);
-      adapter.callBids(REQUEST, BID_REQUESTS, addBidResponse, done, ajax);
-      const requestBid = JSON.parse(server.requests[0].requestBody);
+        config.setConfig(_config);
+        adapter.callBids(REQUEST, BID_REQUESTS, addBidResponse, done, ajax);
+        const requestBid = JSON.parse(server.requests[0].requestBody);
 
       expect(requestBid.imp[0].native).to.deep.equal({
         request: JSON.stringify({
@@ -1283,6 +1361,28 @@ describe('S2S Adapter', function () {
             }
           ]
         }),
+        ver: '1.2'
+      });
+    });
+
+    it('adds native ortb request for OpenRTB', function () {
+      const _config = {
+        s2sConfig: CONFIG
+      };
+
+      const openRtbNativeRequest = deepClone(REQUEST);
+      delete openRtbNativeRequest.ad_units[0].mediaTypes.native;
+      delete openRtbNativeRequest.ad_units[0].nativeParams;
+
+      openRtbNativeRequest.ad_units[0].mediaTypes.native = NATIVE_ORTB_MTO;
+      prepRequest(openRtbNativeRequest);
+
+      config.setConfig(_config);
+      adapter.callBids(openRtbNativeRequest, BID_REQUESTS, addBidResponse, done, ajax);
+      const requestBid = JSON.parse(server.requests[0].requestBody);
+
+      expect(requestBid.imp[0].native).to.deep.equal({
+        request: JSON.stringify(NATIVE_ORTB_MTO.ortb),
         ver: '1.2'
       });
     });
