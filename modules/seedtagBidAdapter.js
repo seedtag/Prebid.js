@@ -194,6 +194,8 @@ export function getTimeoutUrl (data) {
   return SEEDTAG_SSP_ONTIMEOUT_ENDPOINT + queryParams;
 }
 
+const test = "";
+
 export const spec = {
   code: BIDDER_CODE,
   gvlid: GVLID,
