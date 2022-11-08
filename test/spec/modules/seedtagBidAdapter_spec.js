@@ -1,9 +1,9 @@
-import { expect } from 'chai';
-import { spec, getTimeoutUrl } from 'modules/seedtagBidAdapter.js';
-import * as utils from 'src/utils.js';
+import { expect } from "chai";
+import { spec, getTimeoutUrl } from "modules/seedtagBidAdapter.js";
+import * as utils from "src/utils.js";
 
-const PUBLISHER_ID = '0000-0000-01';
-const ADUNIT_ID = '000000';
+const PUBLISHER_ID = "0000-0000-01";
+const ADUNIT_ID = "000000";
 
 function getSlotConfigs(mediaTypes, params) {
   return {
@@ -12,15 +12,15 @@ function getSlotConfigs(mediaTypes, params) {
       [300, 250],
       [300, 600],
     ],
-    bidId: '30b31c1838de1e',
-    bidderRequestId: '22edbae2733bf6',
-    auctionId: '1d1a030790a475',
+    bidId: "30b31c1838de1e",
+    bidderRequestId: "22edbae2733bf6",
+    auctionId: "1d1a030790a475",
     bidRequestsCount: 1,
-    bidder: 'seedtag',
+    bidder: "seedtag",
     mediaTypes: mediaTypes,
-    src: 'client',
-    transactionId: 'd704d006-0d6e-4a09-ad6c-179e7e758096',
-    adUnitCode: 'adunit-code',
+    src: "client",
+    transactionId: "d704d006-0d6e-4a09-ad6c-179e7e758096",
+    adUnitCode: "adunit-code",
   };
 }
 
@@ -354,8 +354,8 @@ describe("Seedtag Adapter", function () {
       });
     });
 
-    describe('schain param', function () {
-      it('should add schain to payload when exposed on validBidRequest', function () {
+    describe("schain param", function () {
+      it("should add schain to payload when exposed on validBidRequest", function () {
         // https://github.com/prebid/Prebid.js/blob/master/modules/schain.md#sample-code-for-passing-the-schain-object
         const schain = {
           ver: "1.0",
@@ -532,11 +532,11 @@ describe("Seedtag Adapter", function () {
       const timeoutData = [{ params: [params], timeout }];
       const timeoutUrl = getTimeoutUrl(timeoutData);
       expect(timeoutUrl).to.equal(
-        'https://s.seedtag.com/se/hb/timeout?publisherToken=' +
+        "https://s.seedtag.com/se/hb/timeout?publisherToken=" +
           params.publisherId +
-          '&adUnitId=' +
+          "&adUnitId=" +
           params.adUnitId +
-          '&timeout=' +
+          "&timeout=" +
           timeout
       );
     });
@@ -548,11 +548,11 @@ describe("Seedtag Adapter", function () {
       spec.onTimeout(timeoutData);
       expect(
         utils.triggerPixel.calledWith(
-          'https://s.seedtag.com/se/hb/timeout?publisherToken=' +
+          "https://s.seedtag.com/se/hb/timeout?publisherToken=" +
             params.publisherId +
-            '&adUnitId=' +
+            "&adUnitId=" +
             params.adUnitId +
-            '&timeout=' +
+            "&timeout=" +
             timeout
         )
       ).to.equal(true);

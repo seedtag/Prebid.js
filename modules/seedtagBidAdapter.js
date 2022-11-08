@@ -254,7 +254,7 @@ export const spec = {
       payload.schain = validBidRequests[0].schain;
     }
 
-    const payloadString = JSON.stringify(payload)
+    const payloadString = JSON.stringify(payload);
     return {
       method: "POST",
       url: SEEDTAG_SSP_ENDPOINT,
@@ -268,10 +268,10 @@ export const spec = {
    * @param {ServerResponse} serverResponse A successful response from the server.
    * @return {Bid[]} An array of bids which were nested inside the server.
    */
-  interpretResponse: function(serverResponse) {
+  interpretResponse: function (serverResponse) {
     const serverBody = serverResponse.body;
     if (serverBody && serverBody.bids && isArray(serverBody.bids)) {
-      return _map(serverBody.bids, function(bid) {
+      return _map(serverBody.bids, function (bid) {
         return buildBidResponse(bid);
       });
     } else {
