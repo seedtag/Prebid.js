@@ -1,11 +1,12 @@
-import { isArray, _map, triggerPixel } from '../src/utils.js';
-import { registerBidder } from '../src/adapters/bidderFactory.js'
-import { VIDEO, BANNER } from '../src/mediaTypes.js'
+import { isArray, _map, triggerPixel } from "../src/utils.js";
+import { registerBidder } from "../src/adapters/bidderFactory.js";
+import { VIDEO, BANNER } from "../src/mediaTypes.js";
+import { config } from "../src/config.js";
 
-const BIDDER_CODE = 'seedtag';
-const SEEDTAG_ALIAS = 'st';
-const SEEDTAG_SSP_ENDPOINT = 'https://s.seedtag.com/c/hb/bid';
-const SEEDTAG_SSP_ONTIMEOUT_ENDPOINT = 'https://s.seedtag.com/se/hb/timeout';
+const BIDDER_CODE = "seedtag";
+const SEEDTAG_ALIAS = "st";
+const SEEDTAG_SSP_ENDPOINT = "https://s.seedtag.com/c/hb/bid";
+const SEEDTAG_SSP_ONTIMEOUT_ENDPOINT = "https://s.seedtag.com/se/hb/timeout";
 const ALLOWED_PLACEMENTS = {
   inImage: true,
   inScreen: true,
@@ -57,10 +58,7 @@ function mapMediaType(seedtagMediaType) {
 }
 
 function hasVideoMediaType(bid) {
-  return (
-    (!!bid.mediaTypes && !!bid.mediaTypes.video) ||
-    (!!bid.params && !!bid.params.video)
-  );
+  return !!bid.mediaTypes && !!bid.mediaTypes.video;
 }
 
 function hasMandatoryParams(params) {
@@ -80,7 +78,8 @@ function hasMandatoryVideoParams(bid) {
     !!videoParams.playerSize &&
     isArray(videoParams.playerSize) &&
     videoParams.playerSize.length > 0 &&
-    bid.params.placement === "inStream" // only inStream is supported for video
+    // only instream is supported for video
+    videoParams.context === "instream"
   );
 }
 
@@ -101,15 +100,11 @@ function buildBidRequest(validBidRequest) {
     adUnitId: params.adUnitId,
     adUnitCode: validBidRequest.adUnitCode,
     placement: params.placement,
-    requestCount: validBidRequest.bidderRequestsCount || 1 // FIXME : in unit test the parameter bidderRequestsCount is undefined
+    requestCount: validBidRequest.bidderRequestsCount || 1, // FIXME : in unit test the parameter bidderRequestsCount is undefined
   };
 
-  if (params.adPosition) {
-    bidRequest.adPosition = params.adPosition;
-  }
-
   if (hasVideoMediaType(validBidRequest)) {
-    bidRequest.videoParams = getVideoParams(validBidRequest)
+    bidRequest.videoParams = getVideoParams(validBidRequest);
   }
 
   return bidRequest;
@@ -125,13 +120,7 @@ function getVideoParams(validBidRequest) {
     videoParams.h = videoParams.playerSize[0][1];
   }
 
-  const bidderVideoParams = (validBidRequest.params && validBidRequest.params.video) || {}
-  // override video params from seedtag bidder params
-  Object.keys(bidderVideoParams).forEach(key => {
-    videoParams[key] = validBidRequest.params.video[key]
-  })
-
-  return videoParams
+  return videoParams;
 }
 
 function buildBidResponse(seedtagBid) {
@@ -148,8 +137,11 @@ function buildBidResponse(seedtagBid) {
     ttl: seedtagBid.ttl,
     nurl: seedtagBid.nurl,
     meta: {
-      advertiserDomains: seedtagBid && seedtagBid.adomain && seedtagBid.adomain.length > 0 ? seedtagBid.adomain : []
-    }
+      advertiserDomains:
+        seedtagBid && seedtagBid.adomain && seedtagBid.adomain.length > 0
+          ? seedtagBid.adomain
+          : [],
+    },
   };
 
   if (mediaType === VIDEO) {
@@ -170,7 +162,7 @@ function ttfb() {
   const ttfb = (() => {
     // Timing API V2
     try {
-      const entry = performance.getEntriesByType('navigation')[0];
+      const entry = performance.getEntriesByType("navigation")[0];
       return Math.round(entry.responseStart - entry.startTime);
     } catch (e) {
       // Timing API V1
@@ -190,19 +182,24 @@ function ttfb() {
   return ttfb >= 0 && ttfb <= performance.now() ? ttfb : 0;
 }
 
-export function getTimeoutUrl (data) {
-  let queryParams = '';
+export function getTimeoutUrl(data) {
+  let queryParams = "";
   if (
-    isArray(data) && data[0] &&
-    isArray(data[0].params) && data[0].params[0]
+    isArray(data) &&
+    data[0] &&
+    isArray(data[0].params) &&
+    data[0].params[0]
   ) {
     const params = data[0].params[0];
-    const timeout = data[0].timeout
+    const timeout = data[0].timeout;
 
     queryParams =
-      '?publisherToken=' + params.publisherId +
-      '&adUnitId=' + params.adUnitId +
-      '&timeout=' + timeout;
+      "?publisherToken=" +
+      params.publisherId +
+      "&adUnitId=" +
+      params.adUnitId +
+      "&timeout=" +
+      timeout;
   }
   return SEEDTAG_SSP_ONTIMEOUT_ENDPOINT + queryParams;
 }
@@ -236,7 +233,7 @@ export const spec = {
       publisherToken: validBidRequests[0].params.publisherId,
       cmp: !!bidderRequest.gdprConsent,
       timeout: bidderRequest.timeout,
-      version: '$prebid.version$',
+      version: "$prebid.version$",
       connectionType: getConnectionType(),
       auctionStart: bidderRequest.auctionStart || Date.now(),
       ttfb: ttfb(),
@@ -245,12 +242,12 @@ export const spec = {
 
     if (payload.cmp) {
       const gdprApplies = bidderRequest.gdprConsent.gdprApplies;
-      if (gdprApplies !== undefined) payload['ga'] = gdprApplies;
-      payload['cd'] = bidderRequest.gdprConsent.consentString;
+      if (gdprApplies !== undefined) payload["ga"] = gdprApplies;
+      payload["cd"] = bidderRequest.gdprConsent.consentString;
     }
 
     if (bidderRequest.uspConsent) {
-      payload['uspConsent'] = bidderRequest.uspConsent
+      payload["uspConsent"] = bidderRequest.uspConsent;
     }
 
     if (validBidRequests[0].schain) {
@@ -259,10 +256,10 @@ export const spec = {
 
     const payloadString = JSON.stringify(payload)
     return {
-      method: 'POST',
+      method: "POST",
       url: SEEDTAG_SSP_ENDPOINT,
-      data: payloadString
-    }
+      data: payloadString,
+    };
   },
 
   /**
@@ -293,7 +290,7 @@ export const spec = {
     const serverResponse = serverResponses[0];
     if (syncOptions.iframeEnabled && serverResponse) {
       const cookieSyncUrl = serverResponse.body.cookieSync;
-      return cookieSyncUrl ? [{ type: 'iframe', url: cookieSyncUrl }] : [];
+      return cookieSyncUrl ? [{ type: "iframe", url: cookieSyncUrl }] : [];
     } else {
       return [];
     }
@@ -316,6 +313,6 @@ export const spec = {
     if (bid && bid.nurl) {
       triggerPixel(bid.nurl);
     }
-  }
-}
+  },
+};
 registerBidder(spec);
