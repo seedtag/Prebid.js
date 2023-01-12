@@ -245,7 +245,7 @@ export const spec = {
     }
 
     if (bidderRequest.gppConsent) {
-      payload.gppConsent = bidderRequest?.gppConsent
+      payload.gppConsent = bidderRequest.gppConsent
     }
 
     const payloadString = JSON.stringify(payload)
