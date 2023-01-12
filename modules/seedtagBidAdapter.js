@@ -177,7 +177,7 @@ function ttfb() {
   return ttfb >= 0 && ttfb <= performance.now() ? ttfb : 0;
 }
 
-export function getTimeoutUrl (data) {
+export function getTimeoutUrl(data) {
   let queryParams = '';
   if (
     isArray(data) && data[0] &&
@@ -244,6 +244,10 @@ export const spec = {
       payload.schain = validBidRequests[0].schain;
     }
 
+    if (bidderRequest.gppConsent) {
+      payload.gppConsent = bidderRequest?.gppConsent
+    }
+
     const payloadString = JSON.stringify(payload)
     return {
       method: 'POST',
@@ -258,10 +262,10 @@ export const spec = {
    * @param {ServerResponse} serverResponse A successful response from the server.
    * @return {Bid[]} An array of bids which were nested inside the server.
    */
-  interpretResponse: function(serverResponse) {
+  interpretResponse: function (serverResponse) {
     const serverBody = serverResponse.body;
     if (serverBody && serverBody.bids && isArray(serverBody.bids)) {
-      return _map(serverBody.bids, function(bid) {
+      return _map(serverBody.bids, function (bid) {
         return buildBidResponse(bid);
       });
     } else {
